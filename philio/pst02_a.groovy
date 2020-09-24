@@ -28,57 +28,6 @@ metadata {
         //fingerprint mfr: "013C", prod: "0002"    			// 少了 model 000c 會沒有illumunation and motion      
         //zw:Ss type:2101 mfr:013C prod:0002 model:0064 ver:1.04 zwv:4.05 lib:03 cc:5E,86,72,98,84 ccOut:5A sec:59,85,73,71,80,30,31,70,7A role:06 ff:8C07 ui:8C07
     }
-
-    tiles (scale:2) {
-            
-        valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat") {
-                state "battery", label:'${currentValue}% battery', unit:""
-        }
-
-        valueTile("temperature", "device.temperature") {
-                state("temperature", label:'${currentValue}°',backgroundColors:[
-                                [value: 31, color: "#153591"],
-                                [value: 44, color: "#1e9cbb"],
-                                [value: 59, color: "#90d2a7"],
-                                [value: 74, color: "#44b621"],
-                                [value: 84, color: "#f1d801"],
-                                [value: 95, color: "#d04e00"],
-                                [value: 96, color: "#bc2323"]
-                        ]
-                )
-        }
-
-        valueTile("illuminance", "device.illuminance", width: 2, height: 2) {
-                state "val", label:'${currentValue}', defaultState: true, backgroundColors: [
-                        [value: 10, color: "#ff0000"],
-                        [value: 90, color: "#0000ff"]
-                ]
-        }
-
-
-        valueTile("tamper", "device.tamper", height: 2, width: 2, decoration: "flat") {
-                state "clear", label: 'tamper clear', backgroundColor: "#ffffff"
-                state "detected", label: 'tampered', backgroundColor: "#ff0000"
-        }
-
-        multiAttributeTile(name: "contact", type: "generic", width: 6, height: 4) {
-                tileAttribute("device.contact", key: "PRIMARY_CONTROL") {
-                        attributeState("open", label: '${name}', icon: "st.contact.contact.open", backgroundColor: "#e86d13")
-                        attributeState("closed", label: '${name}', icon: "st.contact.contact.closed", backgroundColor: "#00A0DC")
-                }
-        }
-
-        multiAttributeTile(name: "motion", type: "generic", width: 6, height: 4) {
-                tileAttribute("device.motion", key: "PRIMARY_CONTROL") {
-                        attributeState("active", label: 'motion', icon: "st.motion.motion.active", backgroundColor: "#00A0DC")
-                        attributeState("inactive", label: 'no motion', icon: "st.motion.motion.inactive", backgroundColor: "#CCCCCC")
-                }
-        }
-
-        main (["contact", "temperature"])
-        details (["contact", "motion", "temperature", "battery", "tamper"])
-}
-
 }   
 
 private getCommandClassVersions() {
