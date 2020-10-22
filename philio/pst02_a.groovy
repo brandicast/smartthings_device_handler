@@ -15,23 +15,26 @@
 metadata {
 	definition (name: "Device Handler for Philio PST02-A", namespace: "Brandicast", author: "Brandon Wu") {
     	capability "Configuration"
-		capability "Battery"
-		capability "Contact Sensor"
-		capability "Motion Sensor"
-		capability "Tamper Alert"
-		capability "Temperature Measurement"
-		capability "Illuminance Measurement"
-        capability "Polling"
+	capability "Battery"
+	capability "Contact Sensor"
+	capability "Motion Sensor"
+	capability "Tamper Alert"
+	capability "Temperature Measurement"
+	capability "Illuminance Measurement"
+ 	capability "Polling"
+        capability "Sensor"
+        capability "Refresh"
         
+        command "clearTamper"       
 
-         fingerprint mfr: "013C", prod: "0002", model: "000C" //, cc:"5E,72,86,59,73,5A,8F,98,7A", ccOut:"20", sec:"85,80,71,85,70,30,31,84"
+        fingerprint mfr: "013C", prod: "0002", model: "000C" //, cc:"5E,72,86,59,73,5A,8F,98,7A", ccOut:"20", sec:"85,80,71,85,70,30,31,84"
         //fingerprint mfr: "013C", prod: "0002"    			// 少了 model 000c 會沒有illumunation and motion      
         //zw:Ss type:2101 mfr:013C prod:0002 model:0064 ver:1.04 zwv:4.05 lib:03 cc:5E,86,72,98,84 ccOut:5A sec:59,85,73,71,80,30,31,70,7A role:06 ff:8C07 ui:8C07
     }
 }   
 
 private getCommandClassVersions() {
-	[  0x30: 2, 0x31: 5, 0x70: 1, 0x71: 3, 0x72: 2, 0x84: 2, 0x85: 2]
+	[ 0x20:1, 0x30:2, 0x31:5, 0x70:1, 0x71:3, 0x72:2, 0x84:2, 0x85:2, 0x98:1]
 	
 	// 0x30 : COMMAND_CLASS_SENSOR_BINARY_V2         ->  Philio PST02-A : v2
 	// 0x31 : COMMAND_CLASS_SENSOR_MULTILEVEL_V5     ->  Philio PST02-A : v5
@@ -73,6 +76,10 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv5.SensorMultilevelR
                 case 1:
                         map.name = "temperature"
                         map.unit = cmd.scale == 1 ? "F" : "C"
+                        //log.debug "temp value = ${cmd.scaledSensorValue}  ${cmd.scale}  ${cmd.precision}"
+                        map.value = convertTemperatureIfNeeded(cmd.scaledSensorValue, map.unit, cmd.precision)
+                        
+           				map.unit = getTemperatureScale()
                         break;
                 case 3:
                         map.name = "illuminance"
@@ -83,11 +90,12 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv5.SensorMultilevelR
         createEvent(map)
 }
 
+
 def zwaveEvent(physicalgraph.zwave.commands.notificationv3.NotificationReport cmd) {
 	def result = []
 	if (cmd.notificationType == 0x06) {
     	switch (cmd.event) {
-        	case 0x16:
+            case 0x16:
             	result << createEvent(name: "contact", value: "open", descriptionText: "$device.displayName is open")
                 break;
             case 0x17:
@@ -193,6 +201,70 @@ def zwaveEvent(physicalgraph.zwave.Command cmd) {
         createEvent(descriptionText: "[NOT HANDLED] ${device.displayName}: ${cmd}")
 }
 
+def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport cmd) {
+	log.debug "[NOT HANDLED] configurationv1.ConfigurationReport is called : ${cmd} "
+}
+
+
+
+def clearTamper() {
+	log.debug "PAT02: clearing tamper"
+    def map = [:]
+	map.name = "tamper"
+	map.value = "clear"
+	map.descriptionText = "$device.displayName is cleared"
+	createEvent(map)
+    sendEvent(map)
+}
+
+// If you add the Configuration capability to your device type, this
+// command will be called right after the device joins to set
+// device-specific configuration commands.
+
+
+def configure() {
+    log.debug "PST02: configure() called x"
+    
+    sendEvent(name: "checkInterval", value: 1 * 1 * 60 * 60 , displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
+
+    def request = []
+	
+    // Not working below 2020/09/29
+    request << zwave.configurationV1.configurationSet(parameterNumber: 5, size: 1, scaledConfigurationValue: 0) // Operation Mode
+    request << zwave.configurationV1.configurationSet(parameterNumber: 7, size: 1, scaledConfigurationValue: 20) // Operation Mode
+
+    request << zwave.wakeUpV2.wakeUpIntervalSet(seconds: 24 * 3600, nodeid:zwaveHubNodeId) // Wake up period
+
+    //7. query sensor data
+    request << zwave.batteryV1.batteryGet()
+   request << zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 1) //temperature
+    request << zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 3) //illuminance
+
+
+    commands(request) + ["delay 20000", zwave.wakeUpV2.wakeUpNoMoreInformation().format()]
+}
+
+private command(physicalgraph.zwave.Command cmd) {
+    if (state.sec) {
+        zwave.securityV1.securityMessageEncapsulation().encapsulate(cmd).format()
+    } else {
+        cmd.format()
+    }
+}
+
+private commands(commands, delay=200) {
+    log.info "sending commands: ${commands}"
+    delayBetween(commands.collect{ command(it) }, delay)
+}
+
+
+def refresh() {
+		log.debug "refresh() is called"
+}
+
+
+/*
+
 def on() {
 	log.debug "on() is called"
         delayBetween([
@@ -209,20 +281,6 @@ def off() {
         ], 5000)  // 5 second delay for dimmers that change gradually, can be left out for immediate switches
 }
 
-def refresh() {
-		log.debug "refresh() is called"
-        // Some examples of Get commands
-        delayBetween([
-                zwave.switchBinaryV1.switchBinaryGet().format(),
-                zwave.switchMultilevelV1.switchMultilevelGet().format(),
-                zwave.meterV2.meterGet(scale: 0).format(),      // get kWh
-                zwave.meterV2.meterGet(scale: 2).format(),      // get Watts
-                zwave.sensorMultilevelV1.sensorMultilevelGet().format(),
-                zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType:1, scale:1).format(),  // get temp in Fahrenheit
-                zwave.batteryV1.batteryGet().format(),
-                zwave.basicV1.basicGet().format(),
-        ], 1200)
-}
 
 // If you add the Polling capability to your device type, this command
 // will be called approximately every 5 minutes to check the device's state
@@ -231,27 +289,7 @@ def poll() {
         zwave.basicV1.basicGet().format()
 }
 
-// If you add the Configuration capability to your device type, this
-// command will be called right after the device joins to set
-// device-specific configuration commands.
-def configure() {
-	log.debug "configure() is called"
-        delayBetween([
-                // Note that configurationSet.size is 1, 2, or 4 and generally
-                // must match the size the device uses in its configurationReport
-                zwave.configurationV1.configurationSet(parameterNumber:7, size:1, scaledConfigurationValue:20).format(),
 
-                // Can use the zwaveHubNodeId variable to add the hub to the
-                // device's associations:
-                //zwave.associationV1.associationSet(groupingIdentifier:2, nodeId:zwaveHubNodeId).format(),
-
-                // Make sure sleepy battery-powered sensors send their
-                // WakeUpNotifications to the hub every 4 hours:
-                //zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format(),
-        ])
-}
-
-/*
 def zwaveEvent(physicalgraph.zwave.commands.sensorbinaryv2.SensorBinaryReport cmd) {
         def result
         switch (cmd.sensorType) {
