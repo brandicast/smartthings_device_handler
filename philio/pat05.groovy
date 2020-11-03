@@ -12,13 +12,12 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  
- https://support.actiontiles.com/communities/12/topics/4889-air-quality-sensor-capability-caqi-or-aqi-or-gm3
- 
  */
 metadata {
 	definition (name: "Device Handler for Philio PAT05", namespace: "Brandicast", author: "Brandon Wu", cstHandler: true) {
 		capability "Air Quality Sensor"
         capability "Configuration"
+        capability "Carbon Dioxide Measurement"
 
 		fingerprint mfr: "013C", prod: "0002", model: "0052", deviceJoinName: "Philio PAT05"
         // raw : zw:Ls2 type:2101 mfr:013C prod:0002 model:0052 ver:1.02 zwv:6.04 lib:03 cc:5E,6C,55,98,9F sec:86,85,59,31,72,5A,73,71,70,7A
@@ -83,8 +82,7 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv5.SensorMultilevelR
     log.debug "sensormultilevelv5 repot is called"
     def map = [:]
     log.debug "sensor type : ${cmd.sensorType}"
-    map.name = "airQuality"
-    map.unit = "ppm"
+    
     
     switch (cmd.sensorType) {
         case 0x11:
@@ -92,15 +90,20 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv5.SensorMultilevelR
             map.linkText = "eCO2"
             state.eco2 = cmd.scaledSensorValue.toInteger().toString()
             map.value =  state.eco2
+            map.name = "carbonDioxide"
+            map.unit = "ppm"
             break;
         case 0x27:
             // TVOC
             map.linkText = "TVOC"
-            state.tvoc = ((float)(cmd.scaledSensorValue.toInteger() /1000 )).toString()
+            // The unit should be ppb.  However, to compromise Smarthings' Air Quality UI, which is a scale from 0 - 100, make the unit as 100ppb
+            state.tvoc = Math.round((cmd.scaledSensorValue.toInteger()/100)).toString()   
             map.value = state.tvoc 
+            map.name = "airQuality"
+            map.unit = "100ppb"
             break;
     }
-    map.unit = map.unit + "(" + map.linkText + ")"
+    //map.unit = map.unit + "(" + map.linkText + ")"
     map.descriptionText = "Air Quality (tVOC/eCO2): " + state.tvoc + "/" + state.eco2 + " ppm"
     
     //map
