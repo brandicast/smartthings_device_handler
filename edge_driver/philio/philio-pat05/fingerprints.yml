@@ -1,0 +1,7 @@
+zwaveManufacturer:
+  - id: "Philio/PAT05"
+    deviceLabel: Philio PAT05
+    manufacturerId: 0x013C
+    productType: 0x0002
+    productId: 0x0052
+    deviceProfileName: philio-pat05-airq

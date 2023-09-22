@@ -1,0 +1,14 @@
+name: philio-pat05-airq
+components:
+- id: main
+  capabilities:
+  - id: tvocMeasurement
+    version: 1
+  - id: carbonDioxideMeasurement
+    version: 1
+  categories:
+    - name: AirQualityDetector
+metadata:
+  deviceType: AirQualityDetector
+  ocfDeviceType: brandicast.com.st.d.sensor.airq
+  deviceTypeId: AirQualityDetector

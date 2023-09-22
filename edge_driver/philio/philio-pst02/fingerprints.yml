@@ -1,0 +1,7 @@
+zwaveManufacturer:
+  - id: "Philio/PST02-A"
+    deviceLabel: Philio PST02-A
+    manufacturerId: 0x013C
+    productType: 0x0002
+    productId: 0x000C
+    deviceProfileName: philio-pst02-a

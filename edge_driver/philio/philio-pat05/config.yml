@@ -1,0 +1,4 @@
+name: 'Philio ZWave Sensor PAT05'
+packageKey: 'philio-zwave-airquality_sensor'
+permissions:
+  zwave: {}

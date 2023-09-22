@@ -1,0 +1,4 @@
+name: 'Philio ZWave Sensor PST02-A'
+packageKey: 'philio-zwave-multisensor'
+permissions:
+  zwave: {}

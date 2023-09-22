@@ -1,0 +1,18 @@
+name: philio-pst02-a
+components:
+- id: main
+  capabilities:
+  - id: motionSensor
+    version: 1
+  - id: contactSensor
+    version: 1
+  - id: temperatureMeasurement
+    version: 1
+  - id: illuminanceMeasurement
+    version: 1
+  categories:
+    - name: MultiFunctionalSensor
+metadata:
+  deviceType: MultiFunctionalSensor
+  ocfDeviceType: brandicast.com.st.d.multisensor
+  deviceTypeId: MultiFunctionalSensor
