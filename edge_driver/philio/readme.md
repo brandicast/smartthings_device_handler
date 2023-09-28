@@ -4,6 +4,8 @@ Currently available devices:
 - Philio ZWave Sensor PST02-A
 - Philio ZWave Sensor PAT05
 
+## Driver Channel link below :
+
 https://callaway.smartthings.com/channels/0c6e8195-fcbd-4a9e-9359-42f0faf19f8b
 
 # Smartthings CLI
