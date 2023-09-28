@@ -1,4 +1,4 @@
-＃ Smartthings Edge Driver for Philio Devices
+# Smartthings Edge Driver for Philio Devices
 
 Currently available devices:  
 - Philio ZWave Sensor PST02-A
