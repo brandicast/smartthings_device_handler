@@ -1,3 +1,11 @@
+＃ Smartthings Edge Driver for Philio Devices
+
+Currently available devices:  
+- Philio ZWave Sensor PST02-A
+- Philio ZWave Sensor PAT05
+
+https://callaway.smartthings.com/channels/0c6e8195-fcbd-4a9e-9359-42f0faf19f8b
+
 # Smartthings CLI
 
 https://github.com/SmartThingsCommunity/smartthings-cli/releases
