@@ -1,4 +1,9 @@
 local Configuration = (require "st.zwave.CommandClass.Configuration")({ version = 1 })
+local WakeUp = (require "st.zwave.CommandClass.WakeUp")({ version = 2 })
+local Battery = (require "st.zwave.CommandClass.Battery")({ version = 1 })
+local Notification = (require "st.zwave.CommandClass.Notification")({ version = 4 })
+local SensorMultilevel = (require "st.zwave.CommandClass.SensorMultilevel")({ version = 5 })
+local SensorBinary = (require "st.zwave.CommandClass.SensorBinary")({ version = 2 })
 local capabilities = require "st.capabilities"
 local ZwaveDriver = require "st.zwave.driver"
 local defaults = require "st.zwave.defaults"
@@ -11,9 +16,7 @@ local ZWAVE_AIRQ_SENSOR_FINGERPRINTS = {
 
 local function can_handle_philio_sensor (opts, driver, device, ...) 
   for _, fingerprint in ipairs(ZWAVE_AIRQ_SENSOR_FINGERPRINTS) do
-    -- log.debug ("bb")
-    -- log.info ("Hi") 
-    -- log.error("x")
+    log.debug ("[Brandicast] can_handle_philio_sensor is called")
     if device:id_match(fingerprint.mfr, fingerprint.prod) then
       return true
     end
@@ -21,13 +24,67 @@ local function can_handle_philio_sensor (opts, driver, device, ...)
   return false
 end
 
+-- zwave_handlers start --
+local function configuration_report(self, device, cmd)
+  log.debug ("[Brandicast] configuration_report is called")
+end 
 
+local function wakeup_notification(self, device, cmd)
+  log.debug ("[Brandicast] wakeup_notification is called")
+end 
+
+local function battery_report(self, device, cmd)
+  log.debug ("[Brandicast] battery_report is called")
+end 
+
+local function notification_report_handler(self, device, cmd)
+  log.debug ("[Brandicast] notification_report_handler is called")
+end 
+
+local function sensor_multilevel_report_handler(self, device, cmd)
+  log.debug ("[Brandicast] sensor_multilevel_report_handler is called")
+end 
+
+local function sensor_binary_report_handler(self, device, cmd)
+  log.debug ("[Brandicast] sensor_binary_report_handler is called")
+end 
+
+-- zwave_handlers end --
+
+-- lifecycle handlers start --
+local function device_init(self, device)
+  log.debug ("[Brandicast] device_init is called")
+  log.debug (device)
+  log.debug (device.debug_pretty_print())
+  log.debug (device.pretty_print())
+end
+
+local function info_changed(self, device, event, args)
+  log.debug ("[Brandicast] info_changed is called")
+end
+
+-- lifecycle handlers end --
 
 local driver_template = {
   zwave_handlers = {
     [cc.CONFIGURATION] = {
       [Configuration.REPORT] = configuration_report
-    }
+    },
+    [cc.WAKE_UP] = {
+      [WakeUp.NOTIFICATION] = wakeup_notification,
+    },
+    [cc.BATTERY] = {
+      [Battery.REPORT] = battery_report,
+    },
+    [cc.NOTIFICATION] = {
+      [Notification.REPORT] = notification_report_handler
+    },
+    [cc.SENSOR_MULTILEVEL] = {
+      [SensorMultilevel.REPORT] = sensor_multilevel_report_handler
+    },
+    [cc.SENSOR_BINARY] = {
+      [SensorBinary.REPORT] = sensor_binary_report_handler
+    },
   },
   supported_capabilities = {
     capabilities.motionSensor,
@@ -36,7 +93,11 @@ local driver_template = {
     capabilities.illuminanceMeasurement,
   },
   lifecycle_handlers = {
-    init = init_dev
+    -- added          = added_handler,
+    init           = device_init,
+    infoChanged    = info_changed,
+    -- doConfigure    = do_configure,
+    -- driverSwitched = driver_switched,
   },
   NAME = "Philio ZWave MultiSensor PST02-A",
   can_handle = can_handle_philio_sensor,
@@ -48,7 +109,6 @@ local driver_template = {
 ]]--
 
 defaults.register_for_default_handlers(driver_template, driver_template.supported_capabilities)
--- log.debug ("Yo")
 -- log.info ("Yo info")
 -- log.error ('Yo err')
 local multiSensor = ZwaveDriver("philio-pst02-a-multisensor", driver_template)
