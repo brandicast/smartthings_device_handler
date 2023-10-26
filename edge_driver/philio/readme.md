@@ -28,12 +28,15 @@ https://callaway.smartthings.com/channels/0c6e8195-fcbd-4a9e-9359-42f0faf19f8b
 - https://developer.smartthings.com/docs/devices/hub-connected/get-started/
 - https://developer.smartthings.com/docs/edge-device-drivers/zwave/driver.html
 - https://github.com/philh30/ST-Edge-Drivers
+- Smartthings CLI command :
+    https://github.com/SmartThingsCommunity/smartthings-cli#commands
 - Smartthings supported ZWave command class list :
 
     https://graph.api.smartthings.com/ide/doc/zwave-utils.html
 - Edge Driver Reference (This one is hard to find from the official web site unless you googled it)
 
   https://developer.smartthings.com/docs/edge-device-drivers/reference/index.html#
+
 
 # Personal note
 
@@ -74,6 +77,8 @@ https://developer.smartthings.com/docs/devices/device-profiles
   <pre>
       device:send(Configuration:Set({parameter_number = value.parameter_number, size = value.size, configuration_value = value.configuration_value}))
     </pre>
+- multiple line comments in LUA
+  tried [[ ]]  but doesn't seem work well...could be mistake somewhere
 
 # PST02-A
 - As Smartthings support older command class, to display the motion event properly, changing the device report from Notification Report to Sensor Binary report (by changing the device configuration No 7's bit4 to 1) 
