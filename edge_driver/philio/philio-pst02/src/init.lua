@@ -10,12 +10,19 @@ local defaults = require "st.zwave.defaults"
 local cc = require "st.zwave.CommandClass"
 local log = require "log"
 
-local ZWAVE_AIRQ_SENSOR_FINGERPRINTS = {
+local PHILIO_PST02_SENSOR_FINGERPRINTS = {
   {mfr = 0x013C, prod = 0x0002, model = 0x000C}  -- Philio PST02-A
 }
 
+local CAPABILITIES = {
+  capabilities.motionSensor,
+  capabilities.contactSensor,
+  capabilities.temperatureMeasurement,
+  capabilities.illuminanceMeasurement,
+}
+
 local function can_handle_philio_sensor (opts, driver, device, ...) 
-  for _, fingerprint in ipairs(ZWAVE_AIRQ_SENSOR_FINGERPRINTS) do
+  for _, fingerprint in ipairs(PHILIO_PST02_SENSOR_FINGERPRINTS) do
     log.debug ("[Brandicast] can_handle_philio_sensor is called")
     if device:id_match(fingerprint.mfr, fingerprint.prod) then
       return true
@@ -55,8 +62,12 @@ end
 local function device_init(self, device)
   log.debug ("[Brandicast] device_init is called")
   log.debug (device)
-  log.debug (device.debug_pretty_print())
-  log.debug (device.pretty_print())
+  log.debug (device.id)  -- this returns the "device id" in smartthings  (a long hex number, NOT the id in profile)
+  log.debug (device.label) -- this returns the "deviceLabel" defined in fingerprints.yml
+  log.debug (device.network_type) -- this returns "DEVICE_ZWAVE"
+  -- device.debug_pretty_print(device)  -- this returns nothing
+  -- log.debug (device.pretty_print(device)) -- this returns the same as device itself  
+  log.debug ("[Brandicast] device_init is finished")
 end
 
 local function info_changed(self, device, event, args)
@@ -86,12 +97,7 @@ local driver_template = {
       [SensorBinary.REPORT] = sensor_binary_report_handler
     },
   },
-  supported_capabilities = {
-    capabilities.motionSensor,
-    capabilities.contactSensor,
-    capabilities.temperatureMeasurement,
-    capabilities.illuminanceMeasurement,
-  },
+  supported_capabilities = CAPABILITIES,
   lifecycle_handlers = {
     -- added          = added_handler,
     init           = device_init,
