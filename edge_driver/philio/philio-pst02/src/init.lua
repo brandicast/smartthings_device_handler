@@ -31,6 +31,25 @@ local function can_handle_philio_sensor (opts, driver, device, ...)
   return false
 end
 
+local function call_parent_handler(handlers, self, device, event, args)
+  if type(handlers) == "function" then
+    handlers = { handlers }  -- wrap as table
+  end
+  for _, func in ipairs( handlers or {} ) do
+      func(self, device, event, args)
+  end
+end
+
+local function dump_table (table, prefix)
+  prefix = prefix .. "-"
+  for key, value in pairs (table) do
+    print (prefix, " ", key, " : ", value)
+    if type(value) == "table" then
+      dump_table (value, prefix)
+    end 
+  end 
+end
+
 -- zwave_handlers start --
 local function configuration_report(self, device, cmd)
   log.debug ("[Brandicast] configuration_report is called")
@@ -50,6 +69,13 @@ end
 
 local function sensor_multilevel_report_handler(self, device, cmd)
   log.debug ("[Brandicast] sensor_multilevel_report_handler is called")
+  if cmd.args.sensor_type == 3 then
+    local max_illuminance = 10000
+    device:emit_event_for_endpoint(cmd.src_channel, capabilities.illuminanceMeasurement.illuminance({value = max_illuminance * cmd.args.sensor_value / 100, unit = "lux"}))
+  elseif cmd.args.sensor_type == 1 then
+    device:emit_event_for_endpoint(cmd.src_channel, capabilities.temperatureMeasurement.temperature({value = cmd.args.sensor_value, unit = "F"} ))
+  end 
+  
 end 
 
 local function sensor_binary_report_handler(self, device, cmd)
@@ -78,6 +104,7 @@ end
 
 local driver_template = {
   zwave_handlers = {
+  --[[
     [cc.CONFIGURATION] = {
       [Configuration.REPORT] = configuration_report
     },
@@ -90,11 +117,12 @@ local driver_template = {
     [cc.NOTIFICATION] = {
       [Notification.REPORT] = notification_report_handler
     },
-    [cc.SENSOR_MULTILEVEL] = {
-      [SensorMultilevel.REPORT] = sensor_multilevel_report_handler
-    },
     [cc.SENSOR_BINARY] = {
       [SensorBinary.REPORT] = sensor_binary_report_handler
+    },
+  --]]
+    [cc.SENSOR_MULTILEVEL] = {
+      [SensorMultilevel.REPORT] = sensor_multilevel_report_handler
     },
   },
   supported_capabilities = CAPABILITIES,
