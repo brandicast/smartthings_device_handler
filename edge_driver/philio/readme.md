@@ -96,12 +96,10 @@ https://developer.smartthings.com/docs/devices/device-profiles
   - could also consider to set this to default while during installation in lua driver [To-Do]
 
 
-# issues
+# Smartthings Communities
 
-1.  Philio PST02-A 's multisensor report for illumination:
+  https://community.smartthings.com/
 
-<pre>
-2023-10-19T16:00:01.409163402+00:00 INFO Philio ZWave Sensor PST02-A  <ZwaveDevice: b15f7ef2-5b3e-44c5-b15e-69cf33c1688c [0F] (Philio PST02-A)> received Z-Wave command: {args={precision=0, <font color='red'>scale="PERCENTAGE"</font>, sensor_type="LUMINANCE", sensor_value=98, size=1}, cmd_class="SENSOR_MULTILEVEL", cmd_id="REPORT", dst_channels={}, encap="S0", payload="<font color='red'>\x03\x01\x62"</font>, src_channel=0, version=1}
-</pre>
+  Originally didn't expect much from the community since Smartthings device integration is relatively niche.  Turns out there are still enthusiastic people helping out.  
 
-seems inconsistent
+  Particularly thanks to Mariano_Colmenarejo for many tips to fill the gap between website documents and actual development. He also provides a handlful tool for device configuration. (https://github.com/Mariano-Github)
