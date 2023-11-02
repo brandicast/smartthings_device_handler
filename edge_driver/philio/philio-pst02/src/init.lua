@@ -32,17 +32,7 @@ local function can_handle_philio_sensor (opts, driver, device, ...)
   return false
 end
 
-local function dump_table (table, prefix)
-  prefix = prefix .. "-"
-  for key, value in pairs (table) do
-    print (prefix, " ", key, " : ", value)
-    if type(value) == "table" then
-      dump_table (value, prefix)
-    end 
-  end 
-end
-
-local function update_preferences(self, device)
+local function update_parameters(self, device)
   --device:send(Version:Get({}))
   --[[
        22 : ask the device to send "motion off" report.  
@@ -89,21 +79,15 @@ end
 -- zwave_handlers end --
 
 -- lifecycle handlers start --
-
-local function added_handler(self, device, event, args)
-  log.debug ("[Brandicast] added_handler is called")
-end
-
 local function device_init(self, device)
   log.debug ("[Brandicast] device_init is called")
-  log.debug (device)
-  log.debug (device.id)  -- this returns the "device id" in smartthings  (a long hex number, NOT the id in profile)
-  log.debug (device.label) -- this returns the "deviceLabel" defined in fingerprints.yml
-  log.debug (device.network_type) -- this returns "DEVICE_ZWAVE"
-  -- device.debug_pretty_print(device)  -- this returns nothing
-  -- log.debug (device.pretty_print(device)) -- this returns the same as device itself  
-  update_preferences(self, device)
+  update_parameters(self, device)
   log.debug ("[Brandicast] device_init is finished")
+end
+
+--[[
+local function added_handler(self, device, event, args)
+  log.debug ("[Brandicast] added_handler is called")
 end
 
 local function info_changed(self, device, event, args)
@@ -118,8 +102,22 @@ local function driver_switched(self, device, event, args)
   log.debug ("[Brandicast] driver_switched is called")
 end
 
+--]]
 
 -- lifecycle handlers end --
+--[[
+local function dump_table (table, prefix)
+  prefix = prefix .. "-"
+  for key, value in pairs (table) do
+    print (prefix, " ", key, " : ", value)
+    if type(value) == "table" then
+      dump_table (value, prefix)
+    end 
+  end 
+end
+--]]
+
+
 
 local driver_template = {
   zwave_handlers = {
@@ -146,11 +144,11 @@ local driver_template = {
   },
   supported_capabilities = CAPABILITIES,
   lifecycle_handlers = {
-    added          = added_handler,
+    --added          = added_handler,
     init           = device_init,
-    infoChanged    = info_changed,
-    doConfigure    = do_configure,
-    driverSwitched = driver_switched,
+    --infoChanged    = info_changed,
+    --doConfigure    = do_configure,
+    --driverSwitched = driver_switched,
   },
   NAME = "Philio ZWave MultiSensor PST02-A",
   can_handle = can_handle_philio_sensor,
