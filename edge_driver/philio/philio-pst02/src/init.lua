@@ -10,6 +10,7 @@ local defaults = require "st.zwave.defaults"
 local cc = require "st.zwave.CommandClass"
 local TemperatureDefaults = require "st.zwave.defaults.temperatureMeasurement"
 local log = require "log"
+local configurations = require "configurations"
 
 local PHILIO_PST02_SENSOR_FINGERPRINTS = {
   {mfr = 0x013C, prod = 0x0002, model = 0x000C}  -- Philio PST02-A
@@ -20,6 +21,7 @@ local CAPABILITIES = {
   capabilities.contactSensor,
   capabilities.temperatureMeasurement,
   capabilities.illuminanceMeasurement,
+  capabilities.battery,
 }
 
 local function can_handle_philio_sensor (opts, driver, device, ...) 
@@ -81,8 +83,14 @@ end
 -- lifecycle handlers start --
 local function device_init(self, device)
   log.debug ("[Brandicast] device_init is called")
-  update_parameters(self, device)
+  log.debug(device)
+--  update_parameters(self, device)
   log.debug ("[Brandicast] device_init is finished")
+end
+
+local function do_configure(self, device, event, args)
+  log.debug ("[Brandicast] do_configure is called")
+  configurations.initial_configuration(self, device)
 end
 
 --[[
@@ -94,9 +102,7 @@ local function info_changed(self, device, event, args)
   log.debug ("[Brandicast] info_changed is called")
 end
 
-local function do_configure(self, device, event, args)
-  log.debug ("[Brandicast] do_configure is called")
-end
+
 
 local function driver_switched(self, device, event, args)
   log.debug ("[Brandicast] driver_switched is called")
@@ -147,7 +153,7 @@ local driver_template = {
     --added          = added_handler,
     init           = device_init,
     --infoChanged    = info_changed,
-    --doConfigure    = do_configure,
+    doConfigure    = do_configure,
     --driverSwitched = driver_switched,
   },
   NAME = "Philio ZWave MultiSensor PST02-A",
