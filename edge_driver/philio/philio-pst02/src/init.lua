@@ -8,6 +8,7 @@ local capabilities = require "st.capabilities"
 local ZwaveDriver = require "st.zwave.driver"
 local defaults = require "st.zwave.defaults"
 local cc = require "st.zwave.CommandClass"
+local TemperatureDefaults = require "st.zwave.defaults.temperatureMeasurement"
 local log = require "log"
 
 local PHILIO_PST02_SENSOR_FINGERPRINTS = {
@@ -31,15 +32,6 @@ local function can_handle_philio_sensor (opts, driver, device, ...)
   return false
 end
 
-local function call_parent_handler(handlers, self, device, event, args)
-  if type(handlers) == "function" then
-    handlers = { handlers }  -- wrap as table
-  end
-  for _, func in ipairs( handlers or {} ) do
-      func(self, device, event, args)
-  end
-end
-
 local function dump_table (table, prefix)
   prefix = prefix .. "-"
   for key, value in pairs (table) do
@@ -48,6 +40,16 @@ local function dump_table (table, prefix)
       dump_table (value, prefix)
     end 
   end 
+end
+
+local function update_preferences(self, device)
+  --device:send(Version:Get({}))
+  --[[
+       22 : ask the device to send "motion off" report.  
+            And changing notification type from Notification Report to with Sensor Binary Report 
+                  (Somehow Notification Report in STH was interpreated as BURGLAR)
+  --]]  
+  device:send(Configuration:Set({parameter_number = 7, size = 1, configuration_value = 22}))
 end
 
 -- zwave_handlers start --
@@ -69,13 +71,15 @@ end
 
 local function sensor_multilevel_report_handler(self, device, cmd)
   log.debug ("[Brandicast] sensor_multilevel_report_handler is called")
+  print (type(self))
   if cmd.args.sensor_type == 3 then
     local max_illuminance = 10000
-    device:emit_event_for_endpoint(cmd.src_channel, capabilities.illuminanceMeasurement.illuminance({value = max_illuminance * cmd.args.sensor_value / 100, unit = "lux"}))
+    local lux = math.tointeger(max_illuminance * cmd.args.sensor_value / 100)
+    device:emit_event_for_endpoint(cmd.src_channel, capabilities.illuminanceMeasurement.illuminance({value = lux, unit = "lux"}))
   elseif cmd.args.sensor_type == 1 then
-    device:emit_event_for_endpoint(cmd.src_channel, capabilities.temperatureMeasurement.temperature({value = cmd.args.sensor_value, unit = "F"} ))
+   -- device:emit_event_for_endpoint(cmd.src_channel, capabilities.temperatureMeasurement.temperature({value = cmd.args.sensor_value, unit = "F"} ))
+   TemperatureDefaults.zwave_handlers[cc.SENSOR_MULTILEVEL][SensorMultilevel.REPORT](self, device, cmd)
   end 
-  
 end 
 
 local function sensor_binary_report_handler(self, device, cmd)
@@ -85,6 +89,11 @@ end
 -- zwave_handlers end --
 
 -- lifecycle handlers start --
+
+local function added_handler(self, device, event, args)
+  log.debug ("[Brandicast] added_handler is called")
+end
+
 local function device_init(self, device)
   log.debug ("[Brandicast] device_init is called")
   log.debug (device)
@@ -93,12 +102,22 @@ local function device_init(self, device)
   log.debug (device.network_type) -- this returns "DEVICE_ZWAVE"
   -- device.debug_pretty_print(device)  -- this returns nothing
   -- log.debug (device.pretty_print(device)) -- this returns the same as device itself  
+  update_preferences(self, device)
   log.debug ("[Brandicast] device_init is finished")
 end
 
 local function info_changed(self, device, event, args)
   log.debug ("[Brandicast] info_changed is called")
 end
+
+local function do_configure(self, device, event, args)
+  log.debug ("[Brandicast] do_configure is called")
+end
+
+local function driver_switched(self, device, event, args)
+  log.debug ("[Brandicast] driver_switched is called")
+end
+
 
 -- lifecycle handlers end --
 
@@ -127,11 +146,11 @@ local driver_template = {
   },
   supported_capabilities = CAPABILITIES,
   lifecycle_handlers = {
-    -- added          = added_handler,
+    added          = added_handler,
     init           = device_init,
     infoChanged    = info_changed,
-    -- doConfigure    = do_configure,
-    -- driverSwitched = driver_switched,
+    doConfigure    = do_configure,
+    driverSwitched = driver_switched,
   },
   NAME = "Philio ZWave MultiSensor PST02-A",
   can_handle = can_handle_philio_sensor,
@@ -143,6 +162,7 @@ local driver_template = {
 ]]--
 
 defaults.register_for_default_handlers(driver_template, driver_template.supported_capabilities)
+
 -- log.info ("Yo info")
 -- log.error ('Yo err')
 local multiSensor = ZwaveDriver("philio-pst02-a-multisensor", driver_template)

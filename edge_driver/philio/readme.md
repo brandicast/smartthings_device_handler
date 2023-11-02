@@ -4,7 +4,7 @@ Currently available devices:
 - Philio ZWave Sensor PST02-A
 - Philio ZWave Sensor PAT05
 
-## #Driver Channel link below :
+## Driver Channel link below :
 
 https://callaway.smartthings.com/channels/0c6e8195-fcbd-4a9e-9359-42f0faf19f8b
 
@@ -21,6 +21,7 @@ https://callaway.smartthings.com/channels/0c6e8195-fcbd-4a9e-9359-42f0faf19f8b
 
 # My Smartthings Console
  https://my.smartthings.com/advanced/hubs/23c4fe6e-54bd-4b50-b632-27f22c016c4b
+
 
 # Reference
 - https://github.com/Mariano-Github/Edge-Drivers-Beta
@@ -78,7 +79,17 @@ https://developer.smartthings.com/docs/devices/device-profiles
       device:send(Configuration:Set({parameter_number = value.parameter_number, size = value.size, configuration_value = value.configuration_value}))
     </pre>
 - multiple line comments in LUA
-  tried [[ ]]  but doesn't seem work well...could be mistake somewhere
+
+  syntax as following :
+  <pre>
+  --[[
+      Whatever comments here
+  --]]
+  </pre>
+
+- client side API document for zwave isn't complete, download the API release from GitHub, and unzip the lua driver source code for complete API
+
+- Customt capability, presentation are json format and submit to edge server thru command.  Then shall be able to reference in LUA code with namespace.cap_id or presentation id.  
 
 # PST02-A
 - As Smartthings support older command class, to display the motion event properly, changing the device report from Notification Report to Sensor Binary report (by changing the device configuration No 7's bit4 to 1) 
