@@ -63,7 +63,6 @@ end
 
 local function sensor_multilevel_report_handler(self, device, cmd)
   log.debug ("[Brandicast] sensor_multilevel_report_handler is called")
-  print (type(self))
   if cmd.args.sensor_type == 3 then
     local max_illuminance = 10000
     local lux = math.tointeger(max_illuminance * cmd.args.sensor_value / 100)
@@ -83,9 +82,6 @@ end
 -- lifecycle handlers start --
 local function device_init(self, device)
   log.debug ("[Brandicast] device_init is called")
-  log.debug(device)
---  update_parameters(self, device)
-  log.debug ("[Brandicast] device_init is finished")
 end
 
 local function do_configure(self, device, event, args)
